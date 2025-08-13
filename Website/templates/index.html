@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot - LLaMA 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1a2e; color: white; font-family: 'Inter', sans-serif; }
+        .chat-container { max-width: 600px; margin: auto; background: #222; padding: 20px; border-radius: 10px; }
+        .chat-box { max-height: 400px; overflow-y: auto; padding: 10px; }
+        .user-msg { background: #007bff; padding: 10px; border-radius: 10px; color: white; display: inline-block; }
+        .bot-msg { background: #444; padding: 10px; border-radius: 10px; display: inline-block; }
+        .typing { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen">
+
+    <div class="chat-container">
+        <h1 class="text-2xl font-bold text-center mb-4">💬 Chatbot</h1>
+
+        <!-- Dropdown to select model -->
+        <label class="block text-center text-gray-300 mb-2">Select Model:</label>
+        <select id="model-select" class="block w-full p-2 mb-4 text-black rounded-md">
+            <option value="llama2:7b">LLaMA 2 - 7B</option>
+            <option value="llama2:13b">LLaMA 2 - 13B</option>
+            <option value="mistral">Mistral</option>
+        </select>
+
+        <div id="chat-box" class="chat-box border border-gray-600 rounded-md p-2"></div>
+
+        <div class="mt-4 flex">
+            <input id="user-input" type="text" class="flex-1 p-2 rounded-md text-black" placeholder="Type your message..." />
+            <button onclick="sendMessage()" class="ml-2 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value.trim();
+            let selectedModel = document.getElementById("model-select").value;  // Get selected model
+            if (!userInput) return;
+
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div class="text-right mb-2"><span class="user-msg">${userInput}</span></div>`;
+            
+            document.getElementById("user-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            chatBox.innerHTML += `<div id="typing" class="text-left mb-2"><span class="bot-msg typing">Typing...</span></div>`;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: userInput, model: selectedModel })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("typing").remove();
+                chatBox.innerHTML += `<div class="text-left mb-2"><span class="bot-msg"><b>${selectedModel}:</b> ${data.response}</span></div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    </script>
+
+</body>
+</html>
